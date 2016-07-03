@@ -1,0 +1,26 @@
+<project name="library" default="compile">
+  <description>
+    Instrumentation Library and Modeled Android Framework Classes
+  </description>
+
+  <property name="src" location="src"/>
+  <property name="lib" location="../libs"/>
+  <property name="build" location="build"/>
+
+  <target name="compile">
+    <mkdir dir="${build}/classes"/>
+    <javac srcdir="${src}" destdir="${build}/classes" includeantruntime="false" debug="on">
+      <classpath>
+        <pathelement path="${classpath}"/>
+        <pathelement path="${lib}/jpf.jar"/>
+      </classpath>
+    </javac>
+    <jar destfile="${build}/library.jar">
+        <fileset dir="${build}/classes" />
+    </jar>  
+  </target>
+
+  <target name="clean" description="Delete all generated files." >
+    <delete dir="${build}"/>
+  </target>
+</project>

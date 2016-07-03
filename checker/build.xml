@@ -1,0 +1,158 @@
+<project name="Event-Serializability Checking Instrumentor" default="app">
+  <description>
+    Instruments an app to check for event serializability violations.
+  </description>
+
+  <property environment="env"/>
+
+  <property name="instrumentor-home" location="instrumentor"/>
+  <property name="build" location="build"/>
+  <property name="lib" location="lib"/>
+  <property name="app.sources.dir" location="../apps" />
+  <property name="app.prebuilt.dir" location="apps" />
+  <property name="logs.dir" location="logs" />
+  <property name="library.dir" location="${app.sources.dir}/checkerLibrary" />
+
+  <target name="compile">
+    <antcall target="instrumentor">
+      <param name="target" value="compile" />
+    </antcall>
+
+    <copy file="${instrumentor-home}/build/instrumentor.jar" todir="${build}"/>
+  </target>
+
+  <target name="check-name">
+    <property name="app.name" value="" />
+    <fail message="Please define 'app.name' parameter">
+      <condition>
+        <equals arg1="${app.name}" arg2=""/>
+      </condition>
+    </fail>
+    <echo message="App name: ${app.name}" />
+  </target>
+
+  <target name="check-mode">
+    <property name="mode" value="" />
+    <fail message="Please define 'mode' parameter: JPF, SMT or LOGRW">
+      <condition>
+        <equals arg1="${mode}" arg2=""/>
+      </condition>
+    </fail>
+    <echo message="Inst Mode: ${mode}" />
+  </target>
+
+  <target name="check-instrument">
+      <condition property="instrument-app-uptodate">
+        <available file="sootOutput" type="dir"/>
+      </condition>
+  </target>
+
+  <target name="check-library">
+      <condition property="library-uptodate">
+        <available file="${library.dir}/build/library.jar" />
+      </condition>
+  </target>
+
+  <target name="check-run-app">
+    <property name="app.class" value="" />
+    <fail message="Please define 'app.class' parameter">
+      <condition>
+        <equals arg1="${app.class}" arg2=""/>
+      </condition>
+    </fail>
+    <echo message="Main Class: ${app.class}" />
+  </target>
+
+  <target name="instrument-app" depends="check-instrument, compile-app, compile" unless="instrument-app-uptodate">
+    <echo message="(Re)instrumenting ${app.name}"/>
+
+    <delete dir="sootOutput"/>
+
+    <java classname="instrumentor.RobCheckInst">
+      <classpath>
+        <pathelement path="${classpath}"/>
+        <pathelement path="${app.prebuilt.dir}/${app.name}"/>
+        <pathelement path="${build}/instrumentor.jar"/>
+        <pathelement path="${lib}/soot.jar"/>
+      </classpath>
+      <arg value="${app.prebuilt.dir}/${app.name}"/>
+      <arg value="${mode}" />
+    </java>
+  </target>
+
+  <target name="verify-app" depends="instrument-app">
+
+    <echo message="Copying ${jpf.file}.jpf"/>
+    <copy file="${app.sources.dir}/${app.name}/${jpf.file}.jpf" todir="sootOutput"/>
+    <echo message="Verifying the instrumented app ${app.name}"/>
+    <!-- task times out after 1 hour -->
+    <exec executable="${env.JPF_HOME}/jpf-core/bin/jpf" dir="sootOutput" timeout="3600000">
+      <arg value="${jpf.file}.jpf"/>
+    </exec>
+  </target>
+
+  <target name="verify-app-out" description="used by runner script" depends="instrument-app">
+
+    <echo message="Copying ${jpf.file}.jpf"/>
+    <copy file="${app.sources.dir}/${app.name}/${jpf.file}.jpf" todir="sootOutput"/>
+    <echo message="Verifying the instrumented app ${app.name}"/>
+    <!-- task times out after 1 hour -->
+    <mkdir dir="${logs.dir}/${app.name}" />
+    <exec executable="${env.JPF_HOME}/jpf-core/bin/jpf" dir="sootOutput" timeout="3600000"
+      output="${logs.dir}/${app.name}/${jpf.file}.txt">
+      <arg value="${jpf.file}.jpf"/>
+    </exec>
+  </target>
+
+  <target name="app" depends="instrument-app" />
+
+  <target name="clean" description="Delete all generated files.">
+    <antcall target="instrumentor">
+      <param name="target" value="clean" />
+    </antcall>
+    <delete dir="${output}"/>
+    <delete dir="sootOutput" />
+    <delete dir="${app.prebuilt.dir}" />
+  </target>
+
+  <target name="clean-app" depends="check-name" description="Delete all generated files.">
+    <ant dir="${app.sources.dir}/${app.name}" target="clean" inheritAll="false" />
+    <antcall target="instrumentor">
+      <param name="target" value="clean" />
+    </antcall>
+    <delete dir="${output}"/>
+    <delete dir="${app.prebuilt.dir}/${app.name}"/>
+  </target>
+
+  <target name="clean-logs" description="Deletes log directory.">
+    <delete dir="${logs.dir}" />
+  </target>
+
+  <target name="instrumentor">
+    <ant dir="${instrumentor-home}" target="${target}" inheritAll="false" />
+  </target>
+
+  <target name="run-app" depends="check-run-app, check-name, check-mode, instrument-app">
+    <echo message="Running ${app.name}" />
+    <mkdir dir="${logs.dir}/${app.name}" />
+    <java classname="${app.class}" output="${logs.dir}/${app.name}/${mode}_${app.class}.txt">
+      <classpath>
+        <pathelement path="sootOutput"/>
+        <pathelement path="${lib}/jpf.jar"/>
+      </classpath>
+      <arg value="${mode}" />
+    </java>
+  </target>
+
+  <target name="compile-app" depends="check-name, compile-lib">
+    <ant dir="${app.sources.dir}/${app.name}" target="compile" inheritAll="false" />
+    <copy todir="${app.prebuilt.dir}/${app.name}">
+      <fileset dir="${app.sources.dir}/${app.name}/build/classes"/>
+    </copy>
+  </target>
+
+  <target name="compile-lib" depends="check-library" unless="library-uptodate">
+    <ant dir="${library.dir}" target="compile" inheritAll="false" />
+  </target>
+
+</project>

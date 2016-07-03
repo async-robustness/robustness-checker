@@ -1,0 +1,11 @@
+*/.idea/*
+apps/aarddict/.idea
+apps/apphangar/.idea
+apps/bookworm/.idea
+.ant-targets-build.xml
+apps/checkerLibrary/build
+apps/checkerLibrary/.idea
+apps/grtransit/.idea
+apps/irccloud/.idea
+apps/vlillechecker/.idea
+checker/instrumentor/.idea

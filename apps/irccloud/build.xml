@@ -1,0 +1,27 @@
+<project name="irccloud" default="compile">
+  <description>
+    Irccloud app
+  </description>
+
+  <property name="src" location="src"/>
+  <property name="lib" location="../libs"/>
+  <property name="build" location="build"/>
+  <property name="library.dir" location="../checkerLibrary/build" />
+
+  <target name="compile">
+    <mkdir dir="${build}/classes"/>
+    <copy todir="${build}/classes">
+      <fileset dir="${library.dir}/classes" />
+    </copy> 
+    <javac srcdir="${src}" destdir="${build}/classes" includeantruntime="false" debug="on">
+      <classpath>
+        <pathelement path="${classpath}"/>
+        <pathelement path="${lib}/jpf.jar"/>
+      </classpath>
+    </javac>
+  </target>
+
+  <target name="clean" description="Delete all generated files." >
+    <delete dir="${build}"/>
+  </target>
+</project>

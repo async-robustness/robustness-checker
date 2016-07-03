@@ -1,0 +1,40 @@
+classpath+=.;
+
+sourcepath=.;
+
+target=SerSendWrite
+target.args=SER
+
+listener+=.listener.AssertionProperty;
+
+#--- enable coverage analyzer
+#listener+=.listener.CoverageAnalyzer
+#coverage.include = test.*
+
+#coverage.show_methods = false
+#coverage.show_branches = false
+#--- search class
+search.class = .search.heuristic.DFSHeuristic
+#search.class = .search.PathSearch
+
+
+
+#--- reporting
+# don't obfuscate things in handlers
+vm.halt_on_throw=java.lang.ArithmeticException
+
+#--- logging
+log.level=debug
+
+
+# get a bunch of traces with different seeds: 
+
+# choice randomization policy in effect:
+#   "NONE" - choice sets are not randomized
+#   "FIXED_SEED" - choice sets are randomized using a fixed seed for each JPF run (reproducible)
+#   "VAR_SEED" - choice sets are randomized using a variable seed for each JPF run
+cg.randomize_choices = FIXED_SEED
+
+# the standard seed value used for the FIXED_SEED policy
+cg.seed = 100
+
