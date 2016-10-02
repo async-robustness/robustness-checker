@@ -721,15 +721,15 @@ public class Settings extends Activity implements ActionBar.TabListener {
                         // the runnable runs on a fresh thread
                         try {
                             // runs async on a background thread
-                            Checker.setProcMode(ProcMode.ASYNCBack);
-                            Checker.beforeAsyncProc(); // might skip the whole async proc // must be inside try
+                            //Checker.setProcMode(ProcMode.ASYNCBack);
+                            Checker.beforeAsyncProc(ProcMode.ASYNCBack); // might skip the whole async proc // must be inside try
                             runnable.run();
 
                         } catch (SkipException e) {
                             // Do not block the caller (catch the exception and continue)
                         } finally {
                             Checker.afterAsyncProc();
-                            Checker.setProcMode(ProcMode.SYNCMain);
+                            //Checker.setProcMode(ProcMode.SYNCMain);
                         }
 
                         return;
@@ -748,15 +748,15 @@ public class Settings extends Activity implements ActionBar.TabListener {
                         // the runnable runs on a fresh thread
                         try {
                             // runs async on a background thread
-                            Checker.setProcMode(ProcMode.ASYNCBack);
-                            Checker.beforeAsyncProc(); // might skip the whole async proc // must be inside try
+                            //Checker.setProcMode(ProcMode.ASYNCBack);
+                            Checker.beforeAsyncProc(ProcMode.ASYNCBack); // might skip the whole async proc // must be inside try
                             runnable2.run();
 
                         } catch (SkipException e) {
                             // Do not block the caller (catch the exception and continue)
                         } finally {
                             Checker.afterAsyncProc();
-                            Checker.setProcMode(ProcMode.SYNCMain);
+                            //Checker.setProcMode(ProcMode.SYNCMain);
                         }
 
                         return;
@@ -844,15 +844,15 @@ public class Settings extends Activity implements ActionBar.TabListener {
             // new Thread(runnable).start();
             // the runnable runs on a fresh thread
             try {
-                Checker.setProcMode(ProcMode.ASYNCBack);
-                Checker.beforeAsyncProc(); // might skip the whole async proc // must be inside try
+                //Checker.setProcMode();
+                Checker.beforeAsyncProc(ProcMode.ASYNCBack); // might skip the whole async proc // must be inside try
                 runnable.run();
 
             } catch (SkipException e) {
                 // Do not block the caller (catch the exception and continue)
             } finally {
                 Checker.afterAsyncProc();
-                Checker.setProcMode(ProcMode.SYNCMain);
+                //Checker.setProcMode(ProcMode.SYNCMain);
             }
 
             /*Handler handler = new Handler();
@@ -870,15 +870,15 @@ public class Settings extends Activity implements ActionBar.TabListener {
             };
             // this runnable runs on the main thread asynchronously
             try {
-                Checker.setProcMode(ProcMode.ASYNCMain);
-                Checker.beforeAsyncProc(); // might skip the whole async proc
+                //Checker.setProcMode(ProcMode.ASYNCMain);
+                Checker.beforeAsyncProc(ProcMode.ASYNCMain); // might skip the whole async proc
                 postedRunnable.run();
 
             } catch (SkipException e) {
                 // Do not block the caller (catch the exception and continue after AsyncTask.execute)
             } finally {
                 Checker.afterAsyncProc();
-                Checker.setProcMode(ProcMode.SYNCMain);
+                //Checker.setProcMode(ProcMode.SYNCMain);
             }
 
             // Notifications need to be refreshed after cache rebuild.
@@ -918,8 +918,8 @@ public class Settings extends Activity implements ActionBar.TabListener {
         //new Thread(runnable).start();
         // the runnable runs on a fresh thread
         try {
-            Checker.setProcMode(ProcMode.ASYNCBack);
-            Checker.beforeAsyncProc();
+            //Checker.setProcMode(ProcMode.ASYNCBack);
+            Checker.beforeAsyncProc(ProcMode.ASYNCBack);
             runnable.run();
 
         } catch (SkipException e) {
@@ -929,7 +929,7 @@ public class Settings extends Activity implements ActionBar.TabListener {
             // Important for the determinism checking:
             // This proc is called in ASYNCBack
             // Return to the caller mode (not to SYNCMain)
-            Checker.setProcMode(ProcMode.ASYNCBack);
+            //Checker.setProcMode(ProcMode.ASYNCBack);
         }
     }
 
@@ -1417,15 +1417,15 @@ public class Settings extends Activity implements ActionBar.TabListener {
             // new Thread(runnable).start();
             // the runnable runs on a fresh thread
             try {
-                Checker.setProcMode(ProcMode.ASYNCBack);
-                Checker.beforeAsyncProc(); // might skip the whole async proc // must be inside try
+                //Checker.setProcMode(ProcMode.ASYNCBack);
+                Checker.beforeAsyncProc(ProcMode.ASYNCBack); // might skip the whole async proc // must be inside try
                 runnable.run();
 
             } catch (SkipException e) {
                 // Do not block the caller (catch the exception and continue)
             } finally {
                 Checker.afterAsyncProc();
-                Checker.setProcMode(ProcMode.SYNCMain);
+                //Checker.setProcMode(ProcMode.SYNCMain);
             }
         }
 
@@ -1507,15 +1507,15 @@ public class Settings extends Activity implements ActionBar.TabListener {
             // new Thread(runnable).start();
             // the runnable runs on a fresh thread
             try {
-                Checker.setProcMode(ProcMode.ASYNCBack);
-                Checker.beforeAsyncProc(); // might skip the whole async proc // must be inside try
+                //Checker.setProcMode();
+                Checker.beforeAsyncProc(ProcMode.ASYNCBack); // might skip the whole async proc // must be inside try
                 runnable.run();
 
             } catch (SkipException e) {
                 // Do not block the caller (catch the exception and continue)
             } finally {
                 Checker.afterAsyncProc();
-                Checker.setProcMode(ProcMode.SYNCMain);
+                //Checker.setProcMode(ProcMode.SYNCMain);
             }
         }
 

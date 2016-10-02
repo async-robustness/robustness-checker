@@ -24,15 +24,22 @@ import java.util.Set;
 
 public final class MatchIterator implements Iterator<Entry> {
 
-    public static int     MAX_FROM_VOL    = 50;
+    // moved clinit initializers into the constructor to avoid SkipExceptions our of async block
+    public static int     MAX_FROM_VOL; //    = 50;
 
     Entry                 next;
-    int                   currentVolCount = 0;
-    Set<Entry>            seen            = new HashSet<Entry>();
-    List<Iterator<Entry>> iterators       = new ArrayList<Iterator<Entry>>();
+    int                   currentVolCount; // = 0;
+    Set<Entry>            seen ; //           = new HashSet<Entry>();
+    List<Iterator<Entry>> iterators ; //      = new ArrayList<Iterator<Entry>>();
     
     MatchIterator(Comparator<Entry>[] comparators,
             Iterable<Volume> dictionaries, LookupWord word) {
+
+        MAX_FROM_VOL    = 50;
+        currentVolCount = 0;
+        seen            = new HashSet<Entry>();
+        iterators       = new ArrayList<Iterator<Entry>>();
+
         for (Comparator<Entry> c : comparators) {
             for (Volume vol : dictionaries) {
                 iterators.add(vol.lookup(word, c));

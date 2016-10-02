@@ -39,3 +39,5 @@ cg.randomize_choices = FIXED_SEED
 cg.seed = 100
 
 #vm.max_transition_length=5000
+
+vm.time.class=.vm.ConstInsnPathTime

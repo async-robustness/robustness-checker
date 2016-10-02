@@ -42,6 +42,7 @@ public class DetIconPackUpdate {
         pf.icon_pack_preference.callOnPreferenceClickListener(new Preference());  // sets AlertDialog.onClick
 
         Checker.setCheckerMode(args[0]);
+        //Checker.setHintPivot("mAppRowAdapter");
         // Check whether deterministic:
         Checker.beforeEvent();
         IconPackHelper.alertDialog.callOnClickListener(IconPackHelper.alertDialog, 0);  // nondet

@@ -13,6 +13,7 @@ public class SerLoadStBack {
         Context.initApplication(Application.class);
 
         Checker.setCheckerMode(args[0]);
+        //Checker.setHintPivot("mCancelled");
 
         Checker.beforeEvent();
         // Event 1 - Load all stations Fragment

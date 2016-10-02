@@ -109,8 +109,8 @@ public abstract class AsyncTask<Params, Progress, Result> {
 
         try {
             // runs async on a background thread
-            Checker.setProcMode(ProcMode.ASYNCBack);
-            Checker.beforeAsyncProc(); // might skip the whole async proc // must be inside try
+            //Checker.setProcMode(ProcMode.ASYNCBack);
+            Checker.beforeAsyncProc(ProcMode.ASYNCBack); // might skip the whole async proc // must be inside try
             result = doInBackground(params);
             doInBackgroundDone = true; // if skipped in the exploration, just explores more, does not harm
 
@@ -118,7 +118,7 @@ public abstract class AsyncTask<Params, Progress, Result> {
             // Do not block the caller (catch the exception and continue after AsyncTask.execute)
         } finally {
             Checker.afterAsyncProc();
-            Checker.setProcMode(ProcMode.SYNCMain);
+            //Checker.setProcMode(ProcMode.SYNCMain);
         }
 
         // if doInBackground is not skipped, run onCancelled/onPostExecute
@@ -138,15 +138,15 @@ public abstract class AsyncTask<Params, Progress, Result> {
 
             //onCancelled(result);
             try {
-                Checker.setProcMode(ProcMode.ASYNCMain);
-                Checker.beforeAsyncProc(); // might skip the whole async proc
+                //Checker.setProcMode(ProcMode.ASYNCMain);
+                Checker.beforeAsyncProc(ProcMode.ASYNCMain); // might skip the whole async proc
                 onCancelled(result);
 
             } catch (SkipException e) {
                 // Do not block the caller (catch the exception and continue after AsyncTask.execute)
             } finally {
                 Checker.afterAsyncProc();
-                Checker.setProcMode(ProcMode.SYNCMain);
+                //Checker.setProcMode(ProcMode.SYNCMain); // can be ASYNCMain depending on where it is called
             }
 
 
@@ -154,15 +154,15 @@ public abstract class AsyncTask<Params, Progress, Result> {
             //onPostExecute(result);
 
             try {
-                Checker.setProcMode(ProcMode.ASYNCMain);
-                Checker.beforeAsyncProc(); // might skip the whole async proc
+                //Checker.setProcMode(ProcMode.ASYNCMain);
+                Checker.beforeAsyncProc(ProcMode.ASYNCMain); // might skip the whole async proc
                 onPostExecute(result);
 
             } catch (SkipException e) {
                 // Do not block the caller (catch the exception and continue after AsyncTask.execute)
             } finally {
                 Checker.afterAsyncProc();
-                Checker.setProcMode(ProcMode.SYNCMain);
+                //Checker.setProcMode(ProcMode.SYNCMain);
             }
         }
         mStatus = Status.FINISHED;

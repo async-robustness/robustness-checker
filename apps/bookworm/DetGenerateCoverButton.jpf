@@ -26,7 +26,7 @@ search.class = .search.heuristic.DFSHeuristic
 vm.halt_on_throw=java.lang.ArithmeticException
 
 #--- logging
-log.level=info
+log.level=debug
 
 
 # get a bunch of traces with different seeds: 
@@ -39,3 +39,5 @@ cg.randomize_choices = FIXED_SEED
 
 # the standard seed value used for the FIXED_SEED policy
 cg.seed = 100
+
+vm.time.class=.vm.ConstInsnPathTime

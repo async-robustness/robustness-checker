@@ -572,7 +572,7 @@ public class MessageActivity extends BaseActivity  implements UsersListFragment.
                 }
             }
             //B Do not check network connection to go into the branch
-            if(e != null && /*conn != null && conn.getState() == NetworkConnection.STATE_CONNECTED &&*/ messageTxt.getText() != null && messageTxt.getText().length() > 0) {
+            if(e != null && conn != null && /*conn.getState() == NetworkConnection.STATE_CONNECTED &&*/ messageTxt.getText() != null && messageTxt.getText().length() > 0) {
                  e.reqid = conn.say(e.cid, e.chan, messageTxt.getText().toString());
 				if(e.msg != null)
 					pendingEvents.put(e.reqid, e);

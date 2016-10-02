@@ -5,17 +5,53 @@
 package checker;
 
 
+import gov.nasa.jpf.vm.Verify;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.Stack;
+
 public abstract class BaseViolationChecker {
-    /**
-     * Must be set in the beginning/end of the async procedures
-     */
-    protected ProcMode PROC_MODE = ProcMode.SYNCMain;
+
+    // keep async-invocation private variables in a structure and keep them in a stack
+    // to handle nested async invocations
+    protected class AsyncInvocationData {
+        protected Set<FieldAccess> rdSetProc;
+        protected Set<FieldAccess> wrSetProc;
+        protected boolean conflictDetected; // async proc local also keeps the conflict of the mainSync
+        protected ProcMode mode;
+
+        public AsyncInvocationData(ProcMode mode) {
+            conflictDetected = false;
+            this.mode = mode;
+            rdSetProc = new HashSet<FieldAccess>();
+            wrSetProc = new HashSet<FieldAccess>();
+        }
+
+        public AsyncInvocationData copy() {
+            AsyncInvocationData copied = new AsyncInvocationData(mode);
+            copied.conflictDetected = conflictDetected;
+            copied.rdSetProc.addAll(rdSetProc);
+            copied.wrSetProc.addAll(wrSetProc);
+
+            return copied;
+        }
+    }
+
+    /* the first block keeps the invocation data for SYNCMain */
+    protected AsyncInvocationData currentAsync = new AsyncInvocationData(ProcMode.SYNCMain);
+    protected Stack<AsyncInvocationData> asyncInvocations = new Stack<AsyncInvocationData>();
+
+    /* Used to check the accesses of an async proc skipped in the main thread */
+    protected boolean skipMainSet = false;
+    protected Set<FieldAccess> rdSetGlobal;
+    protected Set<FieldAccess> wrSetGlobal;
 
     abstract public void beforeEvent();
 
     abstract public void afterEvent();
 
-    abstract public void beforeAsyncProc();
+    abstract public void beforeAsyncProc(ProcMode mode);
 
     abstract public void afterAsyncProc();
 
@@ -35,7 +71,56 @@ public abstract class BaseViolationChecker {
         return false;
     }
 
-    public void setProcMode(ProcMode m) {
+    protected void updateGlobalRWSets(FieldAccess currentAccess) {
+
+        if (skipMainSet && !currentAsync.conflictDetected) {
+            if(inGlobalRWSets(currentAccess)) {
+                currentAsync.conflictDetected = true;
+                // If the conflicting access is in the main thread, ignore this execution (not valid)
+                Verify.ignoreIf(currentAsync.mode == ProcMode.ASYNCMain || currentAsync.mode == ProcMode.SYNCMain);
+            }
+        }
+        // If this access or a previous access in this async proc conflicts, update the sets with the accesses in the proc
+        if (currentAsync.conflictDetected) {
+            /*if (currentAccess.getAccessType().equals("GET")) {
+                rdSetGlobal.addAll(currentAsync.rdSetProc);
+            } else {
+                wrSetGlobal.addAll(currentAsync.wrSetProc);
+            }*/
+            rdSetGlobal.addAll(currentAsync.rdSetProc);
+            wrSetGlobal.addAll(currentAsync.wrSetProc);
+        }
+    }
+
+    private boolean inGlobalRWSets(FieldAccess currentAccess) {
+
+        if(currentAccess.getAccessType().equals("GET")) {
+            for(FieldAccess fa: wrSetGlobal) {
+                if(fa.isToSameVariable(currentAccess)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        if(currentAccess.getAccessType().equals("PUT")) {
+            for(FieldAccess fa: wrSetGlobal) {
+                if(fa.isToSameVariable(currentAccess)) {
+                    return true;
+                }
+            }
+            for(FieldAccess fa: rdSetGlobal) {
+                if(fa.isToSameVariable(currentAccess)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        return false;
+    }
+
+    /*public void setProcMode(ProcMode m) {
 
         if (PROC_MODE == ProcMode.ASYNCMain && m == ProcMode.ASYNCMain) {
             System.out.println("WARNING: The current robustness checker implementation does not support nested asynchronous procedures posted to the main thread!");
@@ -51,7 +136,7 @@ public abstract class BaseViolationChecker {
 
     public ProcMode getProcMode() {
         return PROC_MODE;
-    }
+    }*/
 
 
     /**

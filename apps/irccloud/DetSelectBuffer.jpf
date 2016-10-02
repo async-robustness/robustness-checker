@@ -41,3 +41,5 @@ cg.randomize_choices = FIXED_SEED
 cg.seed = 100
 
 #cgrm.thread.cg_class = gov.nasa.jpf.vm.ThreadChoiceGenerator
+
+vm.time.class=.vm.ConstInsnPathTime

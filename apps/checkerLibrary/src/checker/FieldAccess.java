@@ -44,6 +44,12 @@ public class FieldAccess {
         return accessType + "\t" + objId + "\t" + className + "\t" + fieldName + "\t" + "In: " + methodAccessedIn;
     }
 
+    public boolean isToSameVariable(FieldAccess fa) {
+        if(objId == fa.objId && className.equals(fa.className) && fieldName.equals(fieldName))
+            return true;
+        return false;
+    }
+
     // To be used in the Set of accesses kept in the violation checkers
     @Override
     public boolean equals(Object o) {

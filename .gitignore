@@ -9,3 +9,12 @@ apps/grtransit/.idea
 apps/irccloud/.idea
 apps/vlillechecker/.idea
 checker/instrumentor/.idea
+apps/aarddict/build
+apps/apphangar/build
+apps/bookworm/build
+checker/sootOutput
+apps/grtransit/build
+apps/irccloud/build
+checker/apps
+apps/vlillechecker/build
+checker/instrumentor/build

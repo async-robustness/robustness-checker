@@ -534,14 +534,14 @@ public final class DictionariesActivity extends BaseDictionaryActivity {
 
                     try {
                         // runs async on a background thread
-                        Checker.setProcMode(ProcMode.ASYNCMain);
-                        Checker.beforeAsyncProc();
+                        //Checker.setProcMode(ProcMode.ASYNCMain);
+                        Checker.beforeAsyncProc(ProcMode.ASYNCMain);
                         innerRunnable.run();
                     } catch (SkipException e) {
                         // Do not block the caller
                     } finally {
                         Checker.afterAsyncProc();
-                        Checker.setProcMode(ProcMode.SYNCMain);
+                        //Checker.setProcMode(ProcMode.SYNCMain);
                     }
                 }
             }
@@ -549,14 +549,14 @@ public final class DictionariesActivity extends BaseDictionaryActivity {
 
         try {
             // runs async on a background thread
-            Checker.setProcMode(ProcMode.ASYNCBack); // runs async on a background thread
-            Checker.beforeAsyncProc();
+            //Checker.setProcMode(ProcMode.ASYNCBack); // runs async on a background thread
+            Checker.beforeAsyncProc(ProcMode.ASYNCBack);
             runnable.run();
         } catch (SkipException e) {
             // Do not block the caller
         } finally {
             Checker.afterAsyncProc();
-            Checker.setProcMode(ProcMode.SYNCMain);
+            //Checker.setProcMode(ProcMode.SYNCMain);
         }
     }
 

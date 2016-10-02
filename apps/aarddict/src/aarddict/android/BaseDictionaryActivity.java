@@ -177,16 +177,17 @@ abstract class BaseDictionaryActivity extends Activity {
                                 }
                         };
                     // removed Thread.start(runnable) and made synchronous
+                    // simulate its async execution
                     try {
                         // runs async on a background thread
-                        Checker.setProcMode(ProcMode.ASYNCBack);
-                        Checker.beforeAsyncProc(); // might skip the whole async proc // must be inside try
+                        //Checker.setProcMode(ProcMode.ASYNCBack);
+                        Checker.beforeAsyncProc(ProcMode.ASYNCBack); // might skip the whole async proc // must be inside try
                         runnable.run();
 
                     } catch (SkipException e) {
                     } finally {
                         Checker.afterAsyncProc();
-                        Checker.setProcMode(ProcMode.SYNCMain);
+                        //Checker.setProcMode(ProcMode.SYNCMain);
                     }
                 }
                 else {

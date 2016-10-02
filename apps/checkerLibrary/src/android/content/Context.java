@@ -288,14 +288,14 @@ public class Context {
         // conn.onServiceConnected(service.getComponent(), s.onBind(service)); // this is async on the main thread
 
         try {
-            Checker.setProcMode(ProcMode.ASYNCMain);
-            Checker.beforeAsyncProc(); // might skip the whole async proc
+            //Checker.setProcMode(ProcMode.ASYNCMain);
+            Checker.beforeAsyncProc(ProcMode.ASYNCMain); // might skip the whole async proc
             conn.onServiceConnected(service.getComponent(), s.onBind(service)); // this is async on the main thread
         } catch (SkipException e) {
             // Do not block the caller (catch the exception and continue after AsyncTask.execute)
         } finally {
             Checker.afterAsyncProc();
-            Checker.setProcMode(ProcMode.SYNCMain);
+            //Checker.setProcMode(ProcMode.SYNCMain);
         }
 
         return false;

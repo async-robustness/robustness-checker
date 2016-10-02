@@ -37,3 +37,5 @@ cg.randomize_choices = FIXED_SEED
 
 # the standard seed value used for the FIXED_SEED policy
 cg.seed = 100
+
+vm.time.class=.vm.ConstInsnPathTime

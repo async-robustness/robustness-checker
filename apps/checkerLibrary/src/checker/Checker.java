@@ -38,12 +38,8 @@ public class Checker {
         return CHECKER_MODE;
     }
 
-    public static void setProcMode(ProcMode m) {
-        checker.setProcMode(m);
-    }
-
-    public static void beforeAsyncProc() {
-        checker.beforeAsyncProc();
+    public static void beforeAsyncProc(ProcMode mode) {
+        checker.beforeAsyncProc(mode);
     }
 
     public static void afterAsyncProc() {

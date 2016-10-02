@@ -86,7 +86,7 @@
     <copy file="${app.sources.dir}/${app.name}/${jpf.file}.jpf" todir="sootOutput"/>
     <echo message="Verifying the instrumented app ${app.name}"/>
     <!-- task times out after 1 hour -->
-    <exec executable="${env.JPF_HOME}/jpf-core/bin/jpf" dir="sootOutput" timeout="3600000">
+    <exec executable="${env.JPF_HOME}/jpf-core/bin/jpf" dir="sootOutput">
       <arg value="${jpf.file}.jpf"/>
     </exec>
   </target>
@@ -98,7 +98,7 @@
     <echo message="Verifying the instrumented app ${app.name}"/>
     <!-- task times out after 1 hour -->
     <mkdir dir="${logs.dir}/${app.name}" />
-    <exec executable="${env.JPF_HOME}/jpf-core/bin/jpf" dir="sootOutput" timeout="3600000"
+    <exec executable="${env.JPF_HOME}/jpf-core/bin/jpf" dir="sootOutput"
       output="${logs.dir}/${app.name}/${jpf.file}.txt">
       <arg value="${jpf.file}.jpf"/>
     </exec>

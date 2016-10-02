@@ -15,13 +15,12 @@
 
 package aarddict.android;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 import aarddict.Entry;
+import aarddict.EntryComparator;
+import aarddict.EntryComparators;
+import aarddict.MatchIterator;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -52,6 +51,8 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.TwoLineListItem;
+import checker.Checker;
+import checker.ProcMode;
 import checker.SkipException;
 
 public class LookupActivity extends BaseDictionaryActivity {
@@ -78,7 +79,7 @@ public class LookupActivity extends BaseDictionaryActivity {
     }
 
     private void updateWordListUI(final Iterator<Entry> results) {
-        runOnUiThread(new Runnable() {
+        /*runOnUiThread(new Runnable() {
             public void run() {
                 TextView messageView = (TextView)findViewById(R.id.messageView, TextView.class);
                 if (!results.hasNext()) {
@@ -99,7 +100,43 @@ public class LookupActivity extends BaseDictionaryActivity {
                 listView.setOnItemClickListener(wordAdapter);
                 setProgressBarIndeterminateVisibility(false);
             }
-        });
+        });*/
+
+        Runnable runnable = new Runnable() {
+            public void run() {
+                TextView messageView = (TextView)findViewById(R.id.messageView, TextView.class);
+                if (!results.hasNext()) {
+                    Editable text = editText.getText();
+                    if (text != null && !text.toString().equals("")) {
+                        messageView.setText(Html.fromHtml(getString(R.string.nothingFound)));
+                        messageView.setVisibility(View.VISIBLE);
+                    }
+                    else {
+                        messageView.setVisibility(View.GONE);
+                    }
+                }
+                else {
+                    messageView.setVisibility(View.GONE);
+                }
+                WordAdapter wordAdapter = new WordAdapter(results);
+                listView.setAdapter(wordAdapter);
+                listView.setOnItemClickListener(wordAdapter);
+                setProgressBarIndeterminateVisibility(false);
+            }
+        };
+        // simulate runnable's async execution
+
+        try {
+            // runs async on the main thread
+            Checker.beforeAsyncProc(ProcMode.ASYNCMain);
+            runnable.run();
+
+        } catch (SkipException e) {
+        } finally {
+            Checker.afterAsyncProc();
+            //Checker.setProcMode(ProcMode.SYNCMain);
+        }
+
     }
 
     final Runnable updateProgress = new Runnable() {
@@ -216,7 +253,7 @@ public class LookupActivity extends BaseDictionaryActivity {
                         }
                 }).start();*/
             // make synchronous
-            new Runnable() {
+            Runnable runnable = new Runnable() {
                 public void run() {
                     loadBatch();
                     runOnUiThread(new Runnable() {
@@ -225,7 +262,18 @@ public class LookupActivity extends BaseDictionaryActivity {
                         }
                     });
                 }
-            }.run();
+            };
+
+            // simulate its async execution
+            try {
+                // runs async on a background thread
+                Checker.beforeAsyncProc(ProcMode.ASYNCBack);
+                runnable.run();
+
+            } catch (SkipException e) {
+            } finally {
+                Checker.afterAsyncProc();
+            }
         }
 
         private TwoLineListItem createView(ViewGroup parent) {
@@ -339,13 +387,23 @@ public class LookupActivity extends BaseDictionaryActivity {
                 }, 0);*/
                 // make synchronous
                 //new TimerTask() {
-                new Runnable() {
+                Runnable runnable = new Runnable() {
                     @Override
                     public void run() {
-                        Log.d(TAG, "running lookup task for " + word + " in " + Thread.currentThread());
+                        //Log.d(TAG, "running lookup task for " + word + " in " + Thread.currentThread());
                         doLookup(word);
                     }
-                }.run();
+                };
+
+                // simulate its async behavior
+                try {
+                    Checker.beforeAsyncProc(ProcMode.ASYNCBack);
+                    runnable.run();
+
+                } catch (SkipException e) {
+                } finally {
+                    Checker.afterAsyncProc();
+                }
 
             }
             catch(IllegalStateException e) {
@@ -401,17 +459,6 @@ public class LookupActivity extends BaseDictionaryActivity {
 
                 final Editable textToLookup = s;
 
-                Runnable curTask = new Runnable() {
-                //currentLookupTask = new TimerTask() {
-                    @Override
-                    public void run() {
-                        Log.d(TAG, "running lookup task for " + textToLookup + " in " + Thread.currentThread());
-                        if (textToLookup.toString().equals(editText.getText().toString())) {
-                            //System.out.println("Inside if of doLookUp " + textToLookup);
-                            doLookup(textToLookup);
-                        }
-                    }
-                };
                 /*try {
                         timer.schedule(currentLookupTask, 600);
                 }
@@ -419,11 +466,33 @@ public class LookupActivity extends BaseDictionaryActivity {
                         //this may happen if orientation changes while loading
                         Log.d(TAG, "Failed to schedule lookup task", e);
                 }*/
-                // run synch!
+
+                Runnable runnable = new Runnable() {
+                //currentLookupTask = new TimerTask() {
+                    @Override
+                    public void run() {
+                        //Log.d(TAG, "running lookup task for " + textToLookup + " in " + Thread.currentThread());
+                        if (textToLookup.toString().equals(editText.getText().toString())) {
+                            //System.out.println("Inside if of doLookUp " + textToLookup);
+                            doLookup(textToLookup);
+                        }
+                    }
+                };
+
+                // simulate its async behavior
                 try {
-                    curTask.run(); // goes to lookup in the back //TODO
+                    // load clinit parameters so that they do not throw SkipExceptions inside async block
+                    Comparator<Entry> dummy[] = EntryComparators.ALL;
+                    Checker.beforeAsyncProc(ProcMode.ASYNCBack);
+                    runnable.run();
+
                 } catch (SkipException e) {
+                } finally {
+                    Checker.afterAsyncProc();
                 }
+
+
+
             }
         };
         editText.addTextChangedListener(textWatcher);

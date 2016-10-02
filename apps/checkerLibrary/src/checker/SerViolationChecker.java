@@ -8,13 +8,14 @@ import gov.nasa.jpf.vm.Verify;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Stack;
 
 public class SerViolationChecker extends BaseViolationChecker {
 
     // keeps the pivot access that delays and gets executed at a later point in the execution
     private FieldAccess pivotAccess = null;
     // keeps the exit value that conflicts with the pivot which sets error=true
-    // (the value kept in exitAccess might be overwriten after setting error=true)
+    // (the value kept in exitAccess (also we call as root access) might be overwritten after setting error=true)
     private FieldAccess cycleAccess = null;
     // the event which guesses "cycleAccess" to conflict with "pivotAccess"
     private int cycleAccessIn = 0;
@@ -49,17 +50,11 @@ public class SerViolationChecker extends BaseViolationChecker {
     // the error flag is set to true if guessed exit conflicts with the pivot
     private boolean error = false;
 
-    /* Used to check the accesses of an async proc skipped in the main thread */
-    private boolean skipMainSet = false;
-    private boolean conflictDetected = false; // async proc local
-    private Set rdSetGlobal;
-    private Set wrSetGlobal;
-    private Set rdSetProc;
-    private Set wrSetProc;
-
-
     public void beforeEvent() {
-        PROC_MODE = ProcMode.SYNCMain;
+        // all nested calls of the prev events are returned
+        // initialize invocation data
+        currentAsync = new AsyncInvocationData(ProcMode.SYNCMain);
+        asyncInvocations = new Stack<AsyncInvocationData>();
 
         curEventID++;
 
@@ -96,9 +91,9 @@ public class SerViolationChecker extends BaseViolationChecker {
         if (error && entryTo != null && exitFrom != null && ((entrySetInEvent && firstEventID != curEventID) || (curEventID != cycleAccessIn))) {
             System.out.println("----------- Violation detected: -----------");
             System.out.println("Pivot access:   " + pivotAccess.toString());
-            System.out.println("Cycle access:   " + cycleAccess.toString());
+            System.out.println("Root access:   " + cycleAccess.toString());
             System.out.println("Dependent by Entry  :   " + entryTo.toString());
-            System.out.println("Dependent by exit  :   " + exitFrom.toString());
+            System.out.println("Dependent by Exit  :   " + exitFrom.toString());
             System.out.println("First event in the graph:   " + firstEventID);
             System.out.println("Pivot access in:   " + pivotAccessSetInEventID);
             System.out.println("Cycle access in: " + cycleAccessIn);
@@ -108,45 +103,47 @@ public class SerViolationChecker extends BaseViolationChecker {
     }
 
     // called before any async procedure
-    public void beforeAsyncProc() {
-        conflictDetected = false; // async proc local
+    public void beforeAsyncProc(ProcMode mode) {
 
-        if (PROC_MODE == ProcMode.ASYNCMain) {
+        asyncInvocations.push(currentAsync.copy());
+        currentAsync = new AsyncInvocationData(mode);
+
+        if (currentAsync.mode == ProcMode.ASYNCMain) {
             boolean skipProc = Verify.getBoolean(); // skipProc?
             if (skipProc) {
                 throw new SkipException(); // skip the whole procedure
             }
-
-            // accumulate the r/w accesses of the async proc running on the main thread
-            rdSetProc = new HashSet();
-            wrSetProc = new HashSet();
         }
     }
 
     public void afterAsyncProc() {
-        if (PROC_MODE == ProcMode.ASYNCMain) {
+        if (currentAsync.mode == ProcMode.ASYNCMain) {
             // The executions on the main thread (no matter in SYNC or ASYNC) which conflict with the skipping task's accesses
             // Are ignored immediately in updateGlobalRWSets, so the next line is commented out
             //Verify.ignoreIf(skipMainSet && conflictDetected);
             nondetGoToPivot();
         }
 
-        // Need to reset here!! Otherwise it is set in the sync main thread as well!!
-        conflictDetected = false;
+        // update the current async invocation as the caller
+        if(!asyncInvocations.empty())
+            currentAsync = asyncInvocations.pop();
+        else
+            currentAsync = null;
     }
+
 
     public void onStatement(String accessType, String objId, String className, String fieldName, String methodName) {
         FieldAccess currentAccess = new FieldAccess(accessType, objId, className, fieldName, methodName);
 
-        if (PROC_MODE == ProcMode.ASYNCMain) {
+        if (currentAsync.mode == ProcMode.ASYNCMain) {
             if (!skipMainSet) {
                 boolean skip = Verify.getBoolean();
 
                 if (skip) {
                     skipMainSet = true;
                     // write to the global rd/wr sets: - executed once
-                    rdSetGlobal = rdSetProc;
-                    wrSetGlobal = wrSetProc;
+                    rdSetGlobal = currentAsync.rdSetProc;
+                    wrSetGlobal = currentAsync.wrSetProc;
 
                     if (!pivotAccessSet && firstSet) {  // this might be the pivot stmt if it is not set yet
                         boolean isDelaying = Verify.getBoolean();
@@ -172,14 +169,14 @@ public class SerViolationChecker extends BaseViolationChecker {
 
             // access is not skipped, update rd/wr sets with the new access info:
             if (accessType.equals("GET")) {
-                rdSetProc.add(currentAccess);
+                currentAsync.rdSetProc.add(currentAccess);
             } else {
-                wrSetProc.add(currentAccess);
+                currentAsync.wrSetProc.add(currentAccess);
             }
 
             // the access is either inside an async procedure running in the backg thread
             // or sync procedure running in the main thread (does not set pivot but nondeterministically goes to)
-        } else if (PROC_MODE == ProcMode.ASYNCBack) { // can skip or be pivot only in ASYNC
+        } else if (currentAsync.mode == ProcMode.ASYNCBack) { // can skip or be pivot only in ASYNC
 
             boolean skip = Verify.getBoolean(); // skip?
 
@@ -205,6 +202,12 @@ public class SerViolationChecker extends BaseViolationChecker {
                     throw new SkipException();
                 }
             }
+
+            if (accessType.equals("GET")) {
+                currentAsync.rdSetProc.add(currentAccess);
+            } else {
+                currentAsync.wrSetProc.add(currentAccess);
+            }
         }
 
         // check if the current access conflicts with the global r/w sets
@@ -216,28 +219,7 @@ public class SerViolationChecker extends BaseViolationChecker {
         nondetGoToPivot();
     }
 
-    private void updateGlobalRWSets(FieldAccess currentAccess) {
 
-        if (skipMainSet && !conflictDetected) {
-            if (currentAccess.getAccessType().equals("GET") && wrSetGlobal.contains(currentAccess)) {
-                conflictDetected = true;
-                // If the conflicting access is in the main thread, ignore this execution (not valid)
-                Verify.ignoreIf(PROC_MODE == ProcMode.ASYNCMain || PROC_MODE == ProcMode.SYNCMain);
-            } else if (currentAccess.getAccessType().equals("PUT") && (rdSetGlobal.contains(currentAccess) || wrSetGlobal.contains(currentAccess))) {
-                conflictDetected = true;
-                // If the conflicting access is in the main thread, ignore this execution (not valid)
-                Verify.ignoreIf(PROC_MODE == ProcMode.ASYNCMain || PROC_MODE == ProcMode.SYNCMain);
-            }
-        }
-        // If this access or a previous access in this async proc conflicts, update the sets with the accesses in the proc
-        if (conflictDetected) {
-            if (currentAccess.getAccessType().equals("GET")) {
-                rdSetGlobal.add(currentAccess);
-            } else {
-                wrSetGlobal.add(currentAccess);
-            }
-        }
-    }
 
     /**
      * guess entry/exit
@@ -253,15 +235,15 @@ public class SerViolationChecker extends BaseViolationChecker {
                     exitAccess = tmpExitAccess = currentAccess;
                     exitAccessIn = tmpExitAccessIn = curEventID;
 
-                    isRootInSync = isTmpRootInSync = (PROC_MODE == ProcMode.SYNCMain); // for hint processing HP2
-                    isRootInAsyncMain = isTmpRootInAsyncMain = (PROC_MODE == ProcMode.ASYNCMain); // for hint processing HP3
+                    isRootInSync = isTmpRootInSync = (currentAsync.mode == ProcMode.SYNCMain); // for hint processing HP2
+                    isRootInAsyncMain = isTmpRootInAsyncMain = (currentAsync.mode == ProcMode.ASYNCMain); // for hint processing HP3
 
                 } else {
                     tmpExitAccess = currentAccess;
                     tmpExitAccessIn = curEventID;
 
-                    isTmpRootInSync = (PROC_MODE == ProcMode.SYNCMain); // for hint processing HP2
-                    isTmpRootInAsyncMain = (PROC_MODE == ProcMode.ASYNCMain); // for hint processing HP3
+                    isTmpRootInSync = (currentAsync.mode == ProcMode.SYNCMain); // for hint processing HP2
+                    isTmpRootInAsyncMain = (currentAsync.mode == ProcMode.ASYNCMain); // for hint processing HP3
                 }
                 exitSetInEvent = true;
             }
@@ -339,14 +321,11 @@ public class SerViolationChecker extends BaseViolationChecker {
  *    stmt2;
  *
  *    try {
- *        Checker.setProcMode(ProcMode.ASYNCBack);
- *        Checker.beforeAsyncProc();
+ *        Checker.beforeAsyncProc(ProcMode.ASYNCBack);
  *        runnable.run();  // this runnable originally runs in the background
  *    } catch (SkipException e) {
  *    } finally {
  *       Checker.afterAsyncProc();
- *       // continue synchronously
- *       Checker.setProcMode(ProcMode.SYNCMain);
  *    }
  *    ...
  * }

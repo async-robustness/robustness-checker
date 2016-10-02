@@ -174,16 +174,18 @@ abstract class StationsListFragment extends ListFragment
         //    }
         //});
 
-        try {
-            Checker.setProcMode(ProcMode.ASYNCMain);
-            Checker.beforeAsyncProc(); // might skip the whole async proc
+        // asynchrony can be modeled as follows as well (to simulate its async execution on the main thread)
+        /*try {
+            //Checker.setProcMode(ProcMode.ASYNCMain);
+            Checker.beforeAsyncProc(ProcMode.ASYNCMain); // might skip the whole async proc
             updateVisibleItems();  // run asynchronously on the main thread
 
         } catch (SkipException e) {
         } finally {
             Checker.afterAsyncProc();
-            Checker.setProcMode(ProcMode.SYNCMain);
-        }
+            //Checker.setProcMode(ProcMode.SYNCMain);
+        }*/
+        updateVisibleItems();
     }
 
     /**

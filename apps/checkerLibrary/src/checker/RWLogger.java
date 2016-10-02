@@ -21,7 +21,7 @@ public class RWLogger extends BaseViolationChecker {
     }
 
     @Override
-    public void beforeAsyncProc() {
+    public void beforeAsyncProc(ProcMode mode) {
 
     }
 

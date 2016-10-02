@@ -29,21 +29,21 @@ public class EntryComparators {
 
         @SuppressWarnings("unchecked")
         public static Comparator<Entry>[] ALL = new Comparator[] {
-                FULL3, FULL2, FULL1, START3, START2, START1
-        };
+                 FULL3, FULL2, FULL1, START3, START2, START1
+         };
 
-        @SuppressWarnings("unchecked")
-        public static Comparator<Entry>[] ALL_FULL = new Comparator[] {
-                FULL3, FULL2, FULL1
-        };
+         @SuppressWarnings("unchecked")
+         public static Comparator<Entry>[] ALL_FULL = new Comparator[] {
+                 FULL3, FULL2, FULL1
+         };
 
-        @SuppressWarnings("unchecked")
-        public static Comparator<Entry>[] EXACT_IGNORE_CASE = new Comparator[] {
-                FULL3, FULL2
-        };
+         @SuppressWarnings("unchecked")
+         public static Comparator<Entry>[] EXACT_IGNORE_CASE = new Comparator[] {
+                 FULL3, FULL2
+         };
 
-        @SuppressWarnings("unchecked")
-        public static Comparator<Entry>[] EXACT = new Comparator[] {
-                FULL3
-        };
+         @SuppressWarnings("unchecked")
+         public static Comparator<Entry>[] EXACT = new Comparator[] {
+                 FULL3
+         };
 }
